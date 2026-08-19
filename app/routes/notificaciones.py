@@ -34,3 +34,17 @@ def listar_notificaciones():
     notificaciones = NotificacionService.obtener_por_destinatario(destinatario)
     
     return jsonify([n.to_dict() for n in notificaciones]), 200
+
+
+@notificaciones_bp.route('/<int:notificacion_id>', methods=['GET'])
+def obtener_notificacion_por_id(notificacion_id):
+    """
+    Endpoint: GET /notificaciones/<id>
+    Obtiene la notificación correspondiente al ID proporcionado.
+    Retorna HTTP 200 con la notificación en JSON o HTTP 404 si no existe.
+    """
+    notificacion = NotificacionService.obtener_por_id(notificacion_id)
+    if notificacion is None:
+        return jsonify({'error': f'La notificación con el ID {notificacion_id} no fue encontrada.'}), 404
+
+    return jsonify(notificacion.to_dict()), 200
