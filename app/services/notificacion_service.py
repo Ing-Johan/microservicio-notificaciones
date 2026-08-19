@@ -11,7 +11,6 @@ class NotificacionService:
     def simular_envio(tipo, destinatario, asunto, mensaje):
         """
         Simula el envío de una comunicación por email o SMS.
-        En una implementación real aquí se llamaría a un proveedor de correo/SMS.
         """
         # Simulación exitosa del envío
         return "ENVIADO"
@@ -41,10 +40,13 @@ class NotificacionService:
             estado_envio=estado
         )
 
-        db.session.add(nueva_notificacion)
-        db.session.commit()
-
-        return nueva_notificacion
+        try:
+            db.session.add(nueva_notificacion)
+            db.session.commit()
+            return nueva_notificacion
+        except Exception:
+            db.session.rollback()
+            raise
 
     @staticmethod
     def obtener_por_destinatario(destinatario):

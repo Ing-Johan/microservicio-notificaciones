@@ -19,7 +19,7 @@ def crear_notificacion():
         return jsonify(nueva_notificacion.to_dict()), 201
     except ValueError as e:
         return jsonify({'error': str(e)}), 400
-    except Exception as e:
+    except Exception:
         return jsonify({'error': 'Ocurrió un error interno al procesar la notificación.'}), 500
 
 
@@ -30,10 +30,12 @@ def listar_notificaciones():
     Obtiene las notificaciones filtradas por el parámetro de consulta 'destinatario'.
     Si no existen resultados o no se provee el parámetro, retorna [] con HTTP 200.
     """
-    destinatario = request.args.get('destinatario', default='', type=str)
-    notificaciones = NotificacionService.obtener_por_destinatario(destinatario)
-    
-    return jsonify([n.to_dict() for n in notificaciones]), 200
+    try:
+        destinatario = request.args.get('destinatario', default='', type=str)
+        notificaciones = NotificacionService.obtener_por_destinatario(destinatario)
+        return jsonify([n.to_dict() for n in notificaciones]), 200
+    except Exception:
+        return jsonify({'error': 'Ocurrió un error interno al consultar las notificaciones.'}), 500
 
 
 @notificaciones_bp.route('/<int:notificacion_id>', methods=['GET'])
@@ -43,8 +45,11 @@ def obtener_notificacion_por_id(notificacion_id):
     Obtiene la notificación correspondiente al ID proporcionado.
     Retorna HTTP 200 con la notificación en JSON o HTTP 404 si no existe.
     """
-    notificacion = NotificacionService.obtener_por_id(notificacion_id)
-    if notificacion is None:
-        return jsonify({'error': f'La notificación con el ID {notificacion_id} no fue encontrada.'}), 404
+    try:
+        notificacion = NotificacionService.obtener_por_id(notificacion_id)
+        if notificacion is None:
+            return jsonify({'error': f'La notificación con el ID {notificacion_id} no fue encontrada.'}), 404
 
-    return jsonify(notificacion.to_dict()), 200
+        return jsonify(notificacion.to_dict()), 200
+    except Exception:
+        return jsonify({'error': 'Ocurrió un error interno al consultar la notificación.'}), 500

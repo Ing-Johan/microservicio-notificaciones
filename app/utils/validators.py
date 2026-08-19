@@ -11,8 +11,8 @@ def validar_datos_notificacion(data):
     campos_requeridos = ['destinatario', 'tipo', 'asunto', 'mensaje']
     for campo in campos_requeridos:
         valor = data.get(campo)
-        if valor is None or (isinstance(valor, str) and not valor.strip()):
-            raise ValueError(f"El campo '{campo}' es obligatorio y no puede estar vacío.")
+        if valor is None or (isinstance(valor, str) and not valor.strip()) or not isinstance(valor, (str, int, float)):
+            raise ValueError(f"El campo '{campo}' es obligatorio y debe ser un valor de texto válido.")
 
     tipo = str(data['tipo']).strip().lower()
     if tipo not in ['email', 'sms']:
@@ -23,6 +23,10 @@ def validar_datos_notificacion(data):
         patron_email = r'^[^@\s]+@[^@\s]+\.[^@\s]+$'
         if not re.match(patron_email, destinatario):
             raise ValueError("El campo 'destinatario' no contiene un formato de correo electrónico válido.")
+    elif tipo == 'sms':
+        patron_sms = r'^\+?[0-9\s\-]{7,15}$'
+        if not re.match(patron_sms, destinatario):
+            raise ValueError("El campo 'destinatario' no contiene un número de teléfono válido para SMS.")
 
     return {
         'destinatario': destinatario,
