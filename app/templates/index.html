@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microservicio de Notificaciones - Dashboard & Pruebas</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="app-container">
+        
+        <!-- Navbar Header -->
+        <header class="app-header">
+            <div class="logo-group">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-bell-concierge"></i>
+                </div>
+                <div>
+                    <h1>Microservicio de Notificaciones</h1>
+                    <p class="subtitle">Panel de Gestión CRUD y Pruebas de API REST</p>
+                </div>
+            </div>
+            <div class="system-status">
+                <span class="status-indicator online"></span>
+                <span>SQLite DB Persistente</span>
+            </div>
+        </header>
+
+        <!-- Metrics Dashboard Summary -->
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon purple"><i class="fa-solid fa-layer-group"></i></div>
+                <div class="metric-data">
+                    <span class="metric-title">Total Registros</span>
+                    <h3 id="statTotal">0</h3>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon blue"><i class="fa-solid fa-envelope"></i></div>
+                <div class="metric-data">
+                    <span class="metric-title">Notificaciones Email</span>
+                    <h3 id="statEmail">0</h3>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon green"><i class="fa-solid fa-comment-sms"></i></div>
+                <div class="metric-data">
+                    <span class="metric-title">Notificaciones SMS</span>
+                    <h3 id="statSms">0</h3>
+                </div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon gold"><i class="fa-solid fa-circle-check"></i></div>
+                <div class="metric-data">
+                    <span class="metric-title">Estado Envíos</span>
+                    <h3>100% Simulado</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Workspace Grid -->
+        <div class="workspace-grid">
+            
+            <!-- Left Side: Form Panel (CREATE) -->
+            <div class="panel-card form-panel">
+                <div class="panel-header">
+                    <h2><i class="fa-solid fa-paper-plane"></i> Nueva Notificación</h2>
+                    <span class="badge-tag">POST /notificaciones</span>
+                </div>
+                
+                <form id="createForm" onsubmit="handleCreate(event)">
+                    <div class="form-group">
+                        <label for="tipo"><i class="fa-solid fa-sliders"></i> Tipo de Comunicación</label>
+                        <select id="tipo" required onchange="handleTipoChange(this.value)">
+                            <option value="email">📧 Correo Electrónico (Email)</option>
+                            <option value="sms">📱 Mensaje de Texto (SMS)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="destinatario" id="lblDestinatario"><i class="fa-solid fa-at"></i> Destinatario (Email)</label>
+                        <input type="text" id="destinatario" placeholder="ejemplo@correo.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="asunto"><i class="fa-solid fa-heading"></i> Asunto</label>
+                        <input type="text" id="asunto" placeholder="Asunto del mensaje..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mensaje"><i class="fa-solid fa-align-left"></i> Contenido del Mensaje</label>
+                        <textarea id="mensaje" rows="4" placeholder="Escribe aquí el contenido de la comunicación..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">
+                        <i class="fa-solid fa-paper-plane"></i> Simular Envío y Guardar
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right Side: Data Table Panel (READ / LIST / FILTER) -->
+            <div class="panel-card table-panel">
+                <div class="panel-header flex-between">
+                    <div>
+                        <h2><i class="fa-solid fa-clock-rotate-left"></i> Registro de Auditoría</h2>
+                        <p class="panel-desc">Consulta, actualiza y gestiona las notificaciones en SQLite</p>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" onclick="cargarNotificaciones()">
+                        <i class="fa-solid fa-rotate-right"></i> Recargar
+                    </button>
+                </div>
+
+                <!-- Search and Filter Bar -->
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="filterDestinatario" placeholder="Buscar por destinatario (ej. correo@..." onkeyup="handleFilterKeyup(event)">
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="handleSearchFilter()">
+                        Filtrar
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="clearFilter()">
+                        Limpiar
+                    </button>
+                </div>
+
+                <!-- Data Table -->
+                <div class="table-wrapper">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tipo</th>
+                                <th>Destinatario</th>
+                                <th>Asunto</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <i class="fa-solid fa-spinner fa-spin"></i> Cargando notificaciones...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Edit Modal (UPDATE - PUT) -->
+    <div id="editModal" class="modal-backdrop hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-pen-to-square"></i> Editar Notificación <span id="editModalIdTitle">#</span></h3>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="editForm" onsubmit="handleSaveEdit(event)">
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="editTipo">Tipo de Comunicación</label>
+                    <select id="editTipo" required>
+                        <option value="email">📧 Email</option>
+                        <option value="sms">📱 SMS</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editDestinatario">Destinatario</label>
+                    <input type="text" id="editDestinatario" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editAsunto">Asunto</label>
+                    <input type="text" id="editAsunto" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editMensaje">Mensaje</label>
+                    <textarea id="editMensaje" rows="4" required></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar Cambios (PUT)</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal (DELETE) -->
+    <div id="deleteModal" class="modal-backdrop hidden">
+        <div class="modal-card modal-sm">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-triangle-exclamation color-danger"></i> Confirmar Eliminación</h3>
+                <button class="close-btn" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar la notificación <strong id="deleteModalId">#</strong>?</p>
+                <p class="text-sm color-muted">Esta acción eliminará el registro de auditoría permanentemente en SQLite.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()"><i class="fa-solid fa-trash-can"></i> Sí, Eliminar (DELETE)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

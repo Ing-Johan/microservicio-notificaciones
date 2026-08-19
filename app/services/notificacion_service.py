@@ -49,6 +49,13 @@ class NotificacionService:
             raise
 
     @staticmethod
+    def obtener_todas():
+        """
+        Consulta y retorna todas las notificaciones registradas en la base de datos.
+        """
+        return Notificacion.query.order_by(Notificacion.id.desc()).all()
+
+    @staticmethod
     def obtener_por_destinatario(destinatario):
         """
         Consulta y retorna las notificaciones asociadas a un destinatario.
@@ -56,7 +63,7 @@ class NotificacionService:
         if not destinatario or not str(destinatario).strip():
             return []
         
-        return Notificacion.query.filter_by(destinatario=str(destinatario).strip()).all()
+        return Notificacion.query.filter_by(destinatario=str(destinatario).strip()).order_by(Notificacion.id.desc()).all()
 
     @staticmethod
     def obtener_por_id(notificacion_id):
@@ -64,3 +71,45 @@ class NotificacionService:
         Consulta y retorna una notificación específica por su ID.
         """
         return db.session.get(Notificacion, notificacion_id)
+
+    @classmethod
+    def actualizar_notificacion(cls, notificacion_id, data):
+        """
+        Busca, valida y actualiza una notificación existente por su ID.
+        Si la notificación no existe, retorna None.
+        """
+        notificacion = cls.obtener_por_id(notificacion_id)
+        if notificacion is None:
+            return None
+
+        datos_validados = validar_datos_notificacion(data)
+
+        notificacion.destinatario = datos_validados['destinatario']
+        notificacion.tipo = datos_validados['tipo']
+        notificacion.asunto = datos_validados['asunto']
+        notificacion.mensaje = datos_validados['mensaje']
+
+        try:
+            db.session.commit()
+            return notificacion
+        except Exception:
+            db.session.rollback()
+            raise
+
+    @classmethod
+    def eliminar_notificacion(cls, notificacion_id):
+        """
+        Busca y elimina una notificación existente por su ID.
+        Retorna True si fue eliminada, False si no existía.
+        """
+        notificacion = cls.obtener_por_id(notificacion_id)
+        if notificacion is None:
+            return False
+
+        try:
+            db.session.delete(notificacion)
+            db.session.commit()
+            return True
+        except Exception:
+            db.session.rollback()
+            raise
