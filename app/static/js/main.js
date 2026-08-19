@@ -107,8 +107,8 @@ function renderTable(list) {
             <tr>
                 <td><strong>#${n.id}</strong></td>
                 <td>${tipoBadge}</td>
-                <td>${escapeHtml(n.destinatario)}</td>
-                <td>${escapeHtml(n.asunto)}</td>
+                <td class="cell-truncate" title="${escapeHtml(n.destinatario)}">${escapeHtml(n.destinatario)}</td>
+                <td class="cell-truncate" title="${escapeHtml(n.asunto)}">${escapeHtml(n.asunto)}</td>
                 <td><span class="badge-estado"><i class="fa-solid fa-check"></i> ${escapeHtml(n.estado_envio)}</span></td>
                 <td class="color-muted text-sm">${fechaFormatted}</td>
                 <td>
